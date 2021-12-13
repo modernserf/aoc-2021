@@ -8,7 +8,7 @@ fn main() {
     let rows = input
         .split("\n")
         .map(|line| {
-            let parts = line
+            let mut parts = line
                 .split(" | ")
                 .map(|block| {
                     block
@@ -17,10 +17,9 @@ fn main() {
                         .collect::<Vec<_>>()
                 })
                 .collect::<Vec<_>>();
-            Row {
-                left: parts[0].clone(),
-                right: parts[1].clone(),
-            }
+            let right = parts.pop().unwrap();
+            let left = parts.pop().unwrap();
+            Row { left, right }
         })
         .collect::<Vec<_>>();
 
