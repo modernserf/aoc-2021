@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::VecDeque;
+use std::rc::Rc;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
 enum Node {
@@ -33,24 +34,21 @@ fn parse_node(str: &str) -> Node {
 struct QueueFrame {
     current_node: Node,
     has_visited_twice: bool,
-    visited_nodes: HashSet<Node>,
+    visited_nodes: Rc<HashSet<Node>>,
 }
 
 fn find_paths(graph: &Graph, can_visit_twice: bool) -> usize {
     let mut completed_path_count = 0;
     let mut queue = VecDeque::new();
-    queue.push_front(QueueFrame {
+
+    queue.push_back(QueueFrame {
         current_node: Node::Start,
-        visited_nodes: HashSet::new(),
+        visited_nodes: Rc::new(HashSet::new()),
         has_visited_twice: !can_visit_twice,
     });
-    while let Some(frame) = queue.pop_back() {
-        let QueueFrame {
-            current_node,
-            visited_nodes,
-            has_visited_twice,
-        } = frame;
-        let next_node_options = graph.get(&current_node).unwrap();
+
+    while let Some(frame) = queue.pop_front() {
+        let next_node_options = graph.get(&frame.current_node).unwrap();
         for node in next_node_options {
             match node {
                 Node::Start => {
@@ -62,29 +60,30 @@ fn find_paths(graph: &Graph, can_visit_twice: bool) -> usize {
                 Node::Major(_) => {
                     let next_frame = QueueFrame {
                         current_node: *node,
-                        visited_nodes: visited_nodes.clone(),
-                        has_visited_twice,
+                        visited_nodes: frame.visited_nodes.clone(),
+                        has_visited_twice: frame.has_visited_twice,
                     };
-                    queue.push_front(next_frame);
+                    queue.push_back(next_frame);
                 }
                 Node::Minor(_) => {
-                    let mut next_visited_nodes = visited_nodes.clone();
-                    let visited = next_visited_nodes.contains(node);
+                    let visited = frame.visited_nodes.contains(node);
                     if !visited {
+                        let mut next_visited_nodes = (*frame.visited_nodes).clone();
                         next_visited_nodes.insert(*node);
+
                         let next_frame = QueueFrame {
                             current_node: *node,
-                            visited_nodes: next_visited_nodes,
-                            has_visited_twice,
+                            visited_nodes: Rc::new(next_visited_nodes),
+                            has_visited_twice: frame.has_visited_twice,
                         };
-                        queue.push_front(next_frame);
-                    } else if !has_visited_twice {
+                        queue.push_back(next_frame);
+                    } else if !frame.has_visited_twice {
                         let next_frame = QueueFrame {
                             current_node: *node,
-                            visited_nodes: next_visited_nodes,
+                            visited_nodes: frame.visited_nodes.clone(),
                             has_visited_twice: true,
                         };
-                        queue.push_front(next_frame);
+                        queue.push_back(next_frame);
                     }
                 }
             }
