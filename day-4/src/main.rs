@@ -3,15 +3,15 @@ use std::collections::HashSet;
 
 fn main() {
     let input = include_str!("input.txt");
-    let sections = input.split("\n\n").collect::<Vec<_>>();
-    let seq = sections[0]
+    let mut sections = input.split("\n\n");
+    let seq = sections
+        .next()
+        .unwrap()
         .split(",")
         .map(|x| x.parse::<usize>().unwrap())
         .collect::<Vec<_>>();
 
     let boards = sections
-        .iter()
-        .skip(1)
         .map(|board| {
             let mut map = HashMap::new();
             for (row, col_str) in board.split("\n").enumerate() {
@@ -55,8 +55,7 @@ fn score_board(seq: &[usize], board: &BingoBoard) -> Option<BingoResult> {
     let mut cols = vec![0; 5];
     let mut remaining = board.keys().cloned().collect::<HashSet<usize>>();
 
-    for turn in 0..seq.len() {
-        let val = seq[turn];
+    for (turn, val) in seq.iter().enumerate() {
         if let Some((row, col)) = board.get(&val) {
             remaining.remove(&val);
             rows[*row] += 1;
