@@ -60,7 +60,7 @@ fn find_paths(graph: &Graph, can_visit_twice: bool) -> usize {
                 Node::Major(_) => {
                     let next_frame = QueueFrame {
                         current_node: *node,
-                        visited_nodes: frame.visited_nodes.clone(),
+                        visited_nodes: Rc::clone(&frame.visited_nodes),
                         has_visited_twice: frame.has_visited_twice,
                     };
                     queue.push_back(next_frame);
@@ -80,7 +80,7 @@ fn find_paths(graph: &Graph, can_visit_twice: bool) -> usize {
                     } else if !frame.has_visited_twice {
                         let next_frame = QueueFrame {
                             current_node: *node,
-                            visited_nodes: frame.visited_nodes.clone(),
+                            visited_nodes: Rc::clone(&frame.visited_nodes),
                             has_visited_twice: true,
                         };
                         queue.push_back(next_frame);
